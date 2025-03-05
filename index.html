@@ -3,175 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Eine Musikseite für alle Musikliebhaber.">
-    <title>Musik-Webseite</title>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mein Spiel</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
             color: #333;
         }
 
-        header {
-            background-color: #4a90e2;
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        .game-container {
+            margin-top: 20px;
+            display: none;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 2.5em;
+        iframe {
+            border: none;
+            width: 80%;
+            height: 600px;
         }
 
-        nav ul {
-            list-style-type: none;
-            padding: 0;
+        .link-container {
+            margin-top: 30px;
         }
 
-        nav ul li {
-            display: inline;
-            margin: 0 15px;
-        }
-
-        nav ul li a {
-            color: white;
+        a {
             text-decoration: none;
-            font-weight: bold;
+            color: #008cba;
+            font-size: 20px;
+            cursor: pointer;
         }
 
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-
-        section {
-            padding: 50px 20px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        section h2 {
-            color: #4a90e2;
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-
-        section p {
-            line-height: 1.6;
-        }
-
-        audio {
-            margin-top: 20px;
-            width: 100%;
-        }
-
-        input[type="file"] {
-            margin-top: 20px;
-            font-size: 1em;
+        a:hover {
+            color: #005f75;
         }
 
         button {
-            margin-top: 10px;
+            margin-top: 20px;
             padding: 10px 20px;
-            background-color: #4a90e2;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #008cba;
             color: white;
             border: none;
-            cursor: pointer;
-            font-size: 1em;
             border-radius: 5px;
         }
 
         button:hover {
-            background-color: #357ABD;
-        }
-
-        section#uploaded-files {
-            margin-top: 40px;
-        }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        ul li {
-            margin-bottom: 10px;
+            background-color: #005f75;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Willkommen auf unserer Musikseite</h1>
-        <nav>
-            <ul>
-                <li><a href="#home">Startseite</a></li>
-                <li><a href="#music">Musik</a></li>
-                <li><a href="#impressum">Impressum</a></li>
-                <li><a href="#datenschutz">Datenschutz</a></li>
-            </ul>
-        </nav>
-    </header>
+    <h1>Willkommen zu meinem Spiel GETA</h1>
+    <p>Viel Spaß beim Spielen! Das folgende Spiel ist hier kostenlos verfügbar:</p>
 
-    <section id="home">
-        <h2>Musikdateien hochladen</h2>
-        <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" id="fileInput" name="file" accept="audio/*" required>
-            <button type="submit">Datei hochladen</button>
-        </form>
+    <!-- Container für das eingebettete Spiel -->
+    <div class="game-container" id="gameContainer">
+        <iframe id="gameFrame" src=""></iframe>
+    </div>
 
-        <h2>Hochgeladene Musikdateien</h2>
-        <ul id="uploadedFilesList"></ul>
-    </section>
+    <!-- Link zu den weiteren Informationen -->
+    <div class="link-container">
+        <a id="infoLink" href="https://yip.su/25KVS4" target="_blank">PLAY GETA</a>
+    </div>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+    <!-- Buttons für IP-Adress Funktionen -->
+    <button onclick="saveIpAddress()">Play</button>
+    <button onclick="showSavedIPs()">IP-Adressen anzeigen</button>
+    <p id="status"></p>
+
+    <!-- Firebase SDK einbinden -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // 🔹 Firebase-Konfiguration (ersetze mit deinen eigenen Daten)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBpK28ww2ZXg5MtB1mjy8RnxozihisbKFU",
+            authDomain: "geta-1.firebaseapp.com",
+            projectId: "geta-1",
+            storageBucket: "geta-1.firebasestorage.app",
+            messagingSenderId: "522195602806",
+            appId: "1:522195602806:web:cda4bb3d172546f1fa3e57",
+            measurementId: "G-3V641G293Z"
+        };
+
+        // Firebase initialisieren
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let gameReady = false;
+
+        // Funktion, die auf den Klick des "Info"-Links reagiert
+        document.getElementById('infoLink').addEventListener('click', function(event) {
             event.preventDefault();
-            var formData = new FormData();
-            var fileInput = document.getElementById('fileInput');
-
-            if (fileInput.files.length > 0) {
-                formData.append('file', fileInput.files[0]);
-
-                fetch('upload .php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(data => {
-                    console.log(data);
-                    if (data === 'success') {
-                        alert('Datei erfolgreich hochgeladen!');
-                        loadUploadedFiles();
-                    } else {
-                        alert('Fehler beim Hochladen der Datei');
-                    }
-                });
-            }
+            gameReady = true;
+            window.open('https://yip.su/25KVS4', '_blank');
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('gameFrame').src = "https://zap.struckd.com/games/geta-47";
         });
 
-        function loadUploadedFiles() {
-            fetch('list_files.php')
+        // Funktion zum Speichern der IP-Adresse in Firestore
+        async function saveIpAddress() {
+            if (!gameReady) {
+                alert('Bitte klicken Sie zuerst auf "PLAY GETA", um das Spiel zu starten.');
+                return;
+            }
+
+            fetch('https://api.ipify.org?format=json')
                 .then(response => response.json())
-                .then(data => {
-                    var filesList = document.getElementById('uploadedFilesList');
-                    filesList.innerHTML = '';
-                    data.forEach(function(file) {
-                        var li = document.createElement('li');
-                        var link = document.createElement('a');
-                        link.href = 'uploads/' + file;
-                        link.textContent = file;
-                        link.target = '_blank';
-                        li.appendChild(link);
-                        filesList.appendChild(li);
+                .then(async data => {
+                    console.log("Benutzer-IP:", data.ip);
+
+                    // Checken, ob die IP-Adresse schon gespeichert wurde
+                    const querySnapshot = await getDocs(collection(db, "ip-adressen"));
+                    let ipExists = false;
+
+                    querySnapshot.forEach((doc) => {
+                        if (doc.data().ip === data.ip) {
+                            ipExists = true;
+                        }
                     });
+
+                    // Falls die IP-Adresse noch nicht gespeichert wurde, speicher sie
+                    if (!ipExists) {
+                        try {
+                            await addDoc(collection(db, "ip-adressen"), {
+                                ip: data.ip,
+                                timestamp: new Date()
+                            });
+                            document.getElementById('status').textContent = "IP-Adresse gespeichert!";
+                        } catch (e) {
+                            console.error("Fehler beim Speichern der IP:", e);
+                            document.getElementById('status').textContent = "Fehler beim Speichern.";
+                        }
+                    } else {
+                        document.getElementById('status').textContent = "Diese IP-Adresse wurde bereits gespeichert.";
+                    }
+                })
+                .catch(error => {
+                    console.error('Fehler beim Abrufen der IP-Adresse:', error);
+                    document.getElementById('status').textContent = 'Fehler beim Abrufen der IP-Adresse.';
                 });
         }
 
-        // Dateien beim Laden der Seite anzeigen
-        window.onload = loadUploadedFiles;
+        // Funktion zum Abrufen gespeicherter IP-Adressen aus Firestore
+        async function showSavedIPs() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "ip-adressen"));
+                let ips = [];
+                querySnapshot.forEach((doc) => {
+                    ips.push(doc.data().ip);
+                });
+
+                document.getElementById('status').textContent = ips.length > 0 
+                    ? `Gespeicherte IP-Adressen: ${ips.join(', ')}`
+                    : 'Keine IP-Adressen gespeichert.';
+            } catch (e) {
+                console.error("Fehler beim Laden der IPs:", e);
+                document.getElementById('status').textContent = "Fehler beim Abrufen der IPs.";
+            }
+        }
     </script>
 </body>
 </html>
